@@ -1,0 +1,8 @@
+pip
+nose
+pep8
+flake8
+IPython>4.0.0
+notebook
+pyqt=4.11.4
+bokeh

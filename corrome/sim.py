@@ -1,5 +1,8 @@
+import numpy as np
+from scipy.stats import norm, poisson, multinomial
+from numpy.random import RandomState
 
-def chain_interactions(gradient, mus, sigmas, rng=None):
+def chain_interactions(gradient, mu, sigma):
     """
     This generates an urn simulating a chain of interacting species.
     This commonly occurs in the context of a redox tower, where
@@ -9,9 +12,9 @@ def chain_interactions(gradient, mus, sigmas, rng=None):
     ----------
     gradient: array_like
        Vector of values associated with an underlying gradient.
-    mus: array_like
+    mu: array_like
        Vector of means.
-    sigmas: array_like
+    sigma: array_like
        Vector of standard deviations.
     rng: np.random.RandomState
        Numpy random state.
@@ -24,7 +27,11 @@ def chain_interactions(gradient, mus, sigmas, rng=None):
        to the number of samples along the `gradient` and `m`
        corresponds to the number of species in `mus`.
     """
-    pass
+
+    xs = [norm.pdf(gradient, loc=mu[i], scale=sigma[i])
+          for i in range(len(mu))]
+    return np.vstack(xs)
+
 
 def multinomial_sample(X, lam, rng=None):
     """
@@ -34,14 +41,14 @@ def multinomial_sample(X, lam, rng=None):
     Parameters
     ----------
     X: array_like
-       A matrix of real-valued positive abundances where
-       there are `n` rows and `m` columns where `n` corresponds
-       to the number of samples and `m` corresponds to the number
-       of species.
-    n: array_like
-       Sequencing depth for each
+       A matrix of counts where there are `n` rows and `m` columns
+       where `n` corresponds to the number of samples and `m`
+       corresponds to the number of species.
+    lam : float
+       Poisson parameter, which is also the mean and variance
+       of the Poisson.
     rng: np.random.RandomState
-       Numpy random state.
+       Numpy random state number generator.
 
     Returns
     -------
@@ -51,7 +58,13 @@ def multinomial_sample(X, lam, rng=None):
        to the number of samples and `m` corresponds to the number
        of species.
     """
-    pass
+    if rng is None:
+        rng = RandomState(0)
+    seq_depths = poisson.rvs(lam, size=X.shape[0], random_state=rng)
+    counts = [multinomial(seq_depths[i], X[i, :], random_state=rng)
+              for i in len(seq_depths)]
+    return np.vstack(counts)
+
 
 def compositional_noise(sigma, nsamp, rng=None):
     """

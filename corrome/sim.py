@@ -1,6 +1,8 @@
 import numpy as np
-from scipy.stats import norm, poisson, multinomial
+from scipy.stats import norm, poisson, multinomial, multivariate_normal
 from numpy.random import RandomState
+from skbio.stats.composition import ilr_inv, ilr, closure
+
 
 def chain_interactions(gradient, mu, sigma):
     """
@@ -61,23 +63,25 @@ def multinomial_sample(X, lam, rng=None):
     if rng is None:
         rng = RandomState(0)
     seq_depths = poisson.rvs(lam, size=X.shape[0], random_state=rng)
-    counts = [multinomial(seq_depths[i], X[i, :], random_state=rng)
-              for i in len(seq_depths)]
+    counts = [multinomial.rvs(seq_depths[i], X[i, :], random_state=rng)
+              for i in range(len(seq_depths))]
     return np.vstack(counts)
 
 
-def compositional_noise(sigma, nsamp, rng=None):
+def compositional_noise(cov, nsamp, rng=None):
     """
     This is multiplicative noise applied across the entire dataset.
+    The noise is assumed to be Gaussian in the simplex.
 
     Parameters
     ----------
-    rng: np.random.RandomState
-       Numpy random state.
-    sigma: array_like
-       Vector of standard deviations in ilr space.
+    cov: array_like
+       Covariance matrix for the normal distribution in ilr space.
+       This is assumed to be in the default gram-schmidt orthonormal basis.
     nsamp: int
        Number of samples to generate
+    rng: np.random.RandomState
+       Numpy random state.
 
     Returns
     -------
@@ -85,9 +89,12 @@ def compositional_noise(sigma, nsamp, rng=None):
        A matrix of probabilities where there are `n` rows and
        `m` columns where `n` corresponds to the number of samples
        and `m` corresponds to the number of species.
-
     """
-    pass
+    if rng is None:
+        rng = RandomState(0)
+    dist = multivariate_normal.rvs(cov=cov, size=nsamp, random_state=rng)
+    return ilr_inv(dist)
+
 
 def count_noise(lam, p, nsamp, rng=None):
     """
@@ -114,9 +121,14 @@ def count_noise(lam, p, nsamp, rng=None):
        A matrix of counts where there are `n` rows and `m` columns
        where `n` corresponds to the number of samples and `m`
        corresponds to the number of species.
-
     """
-    pass
+    if rng is None:
+        rng = RandomState(0)
+    seq_depths = poisson.rvs(lam, size=nsamp, random_state=rng)
+    counts = [multinomial.rvs(seq_depths[i], p, random_state=rng)
+              for i in range(len(seq_depths))]
+    return np.vstack(counts)
+
 
 def train_count_parameters(data):
     """
@@ -139,13 +151,17 @@ def train_count_parameters(data):
     p: np.array
        Vector of multinomial probabilities.
     """
-    pass
+    depths = data.sum(axis=1)
+    lam = depths.mean()
+    p = closure(data.sum(axis=0))
+    return lam, p
+
 
 def train_compositional_parameters(data):
     """
     Given noisy compositional data, try to learn the compositional noise
-    parameters.
-
+    parameters.  It is assumed that noise follows a Gaussian distribution in
+    the ilr space.
 
     Parameters
     ----------
@@ -157,10 +173,11 @@ def train_compositional_parameters(data):
     Returns
     -------
     mu: float
-       Mean of ilr normal.
-    sigma: float
-       Standard deviation of ilr normal.
+       Mean of ilr normal in the default gram schmidt space
+    cov: float
+       Covariance matrix of ilr normal in the default gram schmidt space
     """
-    pass
-
-
+    X = ilr(data)
+    mu = np.mean(X, axis=0)
+    cov = np.cov(X.T)
+    return mu, cov

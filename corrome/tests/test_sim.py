@@ -6,7 +6,7 @@ from skbio.stats.composition import closure
 from corrome.sim import (chain_interactions, multinomial_sample,
                          compositional_noise, count_noise,
                          train_count_parameters,
-                         train_composition_parameters)
+                         train_compositional_parameters)
 
 
 class TestSim(unittest.TestCase):
@@ -49,16 +49,60 @@ class TestSim(unittest.TestCase):
         npt.assert_allclose(res, exp)
 
     def test_compositional_noise(self):
-        pass
+        cov = np.eye(2)
+        res = compositional_noise(cov, 5)
+        exp = np.array([[0.79460719, 0.06556888, 0.13982394],
+                        [0.77959817, 0.19531899, 0.02508284],
+                        [0.51151606, 0.03646136, 0.45202258],
+                        [0.53313183, 0.13909273, 0.32777544],
+                        [0.35615769, 0.4121334 , 0.23170892]])
+        npt.assert_allclose(res, exp)
 
     def test_count_noise(self):
-        pass
+        rng = RandomState(0)
+        p = [0.15, 0.25, 0.2, 0.1, 0.3]
+        lam = 100
+        res = count_noise(lam, p, nsamp=5, rng=rng)
+
+        exp = np.array([[18, 25, 20, 13, 25],
+                        [10, 21, 16, 17, 39],
+                        [17, 28, 25,  9, 19],
+                        [14, 28, 15, 11, 30],
+                        [15, 27, 32, 13, 40]])
+        npt.assert_allclose(res, exp)
+
+        # Make sure that the proportions look sane
+        exp = np.array(
+            [[0.17821782, 0.24752475, 0.1980198 , 0.12871287, 0.24752475],
+             [0.09708738, 0.2038835, 0.15533981, 0.16504854, 0.37864078],
+             [0.17346939, 0.28571429, 0.25510204, 0.09183673, 0.19387755],
+             [0.14285714, 0.28571429, 0.15306122, 0.1122449, 0.30612245],
+             [0.11811024, 0.21259843, 0.2519685, 0.1023622, 0.31496063]])
+        npt.assert_allclose(closure(res), exp)
 
     def test_train_count_parameters(self):
-        pass
+        data = np.array([[18, 25, 20, 13, 25],
+                         [10, 21, 16, 17, 39],
+                         [17, 28, 25,  9, 19],
+                         [14, 28, 15, 11, 30],
+                         [15, 27, 32, 13, 40]])
+        lam, p = train_count_parameters(data)
+        self.assertAlmostEquals(lam, 105.40000000000001)
+        exp_p = np.array([0.14041746, 0.24478178, 0.20493359,
+                          0.11954459, 0.29032258])
+        npt.assert_allclose(exp_p, p)
 
     def test_train_compositional_parameters(self):
-        pass
+        cov = np.eye(2)
+        # generate model with identify covariance and 0 mean.
+        data = compositional_noise(cov, 1000)
+        mu, cov = train_compositional_parameters(data)
+
+        exp_mu = np.array([-0.02173648, -0.00990328])
+        npt.assert_allclose(exp_mu, mu, atol=1e-5)
+        exp_cov = np.array([[0.95037693, -0.01333414],
+                            [-0.01333414, 0.96476946]])
+        npt.assert_allclose(exp_cov, cov, atol=1e-5)
 
 
 if __name__ == "__main__":

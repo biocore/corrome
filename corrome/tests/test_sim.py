@@ -58,28 +58,6 @@ class TestSim(unittest.TestCase):
                         [0.35615769, 0.4121334 , 0.23170892]])
         npt.assert_allclose(res, exp)
 
-    def test_count_noise(self):
-        rng = RandomState(0)
-        p = [0.15, 0.25, 0.2, 0.1, 0.3]
-        lam = 100
-        res = count_noise(lam, p, nsamp=5, rng=rng)
-
-        exp = np.array([[18, 25, 20, 13, 25],
-                        [10, 21, 16, 17, 39],
-                        [17, 28, 25,  9, 19],
-                        [14, 28, 15, 11, 30],
-                        [15, 27, 32, 13, 40]])
-        npt.assert_allclose(res, exp)
-
-        # Make sure that the proportions look sane
-        exp = np.array(
-            [[0.17821782, 0.24752475, 0.1980198 , 0.12871287, 0.24752475],
-             [0.09708738, 0.2038835, 0.15533981, 0.16504854, 0.37864078],
-             [0.17346939, 0.28571429, 0.25510204, 0.09183673, 0.19387755],
-             [0.14285714, 0.28571429, 0.15306122, 0.1122449, 0.30612245],
-             [0.11811024, 0.21259843, 0.2519685, 0.1023622, 0.31496063]])
-        npt.assert_allclose(closure(res), exp)
-
     def test_train_count_parameters(self):
         data = np.array([[18, 25, 20, 13, 25],
                          [10, 21, 16, 17, 39],

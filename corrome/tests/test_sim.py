@@ -28,7 +28,7 @@ class TestSim(unittest.TestCase):
                         [7.43359757e-07, 3.38815049e-05, 7.71139498e-04,
                          8.76415025e-03, 4.97385694e-02, 1.40955938e-01,
                          1.99471140e-01, 1.40955938e-01, 4.97385694e-02,
-                         8.76415025e-03]])
+                         8.76415025e-03]]).T
         npt.assert_allclose(res, exp)
 
     def test_multinomial_sample(self):
@@ -87,7 +87,7 @@ class TestSim(unittest.TestCase):
                          [14, 28, 15, 11, 30],
                          [15, 27, 32, 13, 40]])
         lam, p = train_count_parameters(data)
-        self.assertAlmostEquals(lam, 105.40000000000001)
+        self.assertAlmostEqual(lam, 105.40000000000001)
         exp_p = np.array([0.14041746, 0.24478178, 0.20493359,
                           0.11954459, 0.29032258])
         npt.assert_allclose(exp_p, p)

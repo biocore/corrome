@@ -32,7 +32,7 @@ def chain_interactions(gradient, mu, sigma):
 
     xs = [norm.pdf(gradient, loc=mu[i], scale=sigma[i])
           for i in range(len(mu))]
-    return np.vstack(xs)
+    return np.vstack(xs).T
 
 
 def multinomial_sample(X, lam, rng=None):

@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-
-import re
-import ast
 import os
 
 from setuptools import find_packages, setup
@@ -79,4 +76,4 @@ setup(name='corrome',
       classifiers=classifiers,
       package_data={
           }
-)
+      )

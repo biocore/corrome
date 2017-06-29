@@ -4,7 +4,7 @@ import numpy.testing as npt
 from numpy.random import RandomState
 from skbio.stats.composition import closure
 from corrome.sim import (chain_interactions, multinomial_sample,
-                         compositional_noise, count_noise,
+                         compositional_noise,
                          train_count_parameters,
                          train_compositional_parameters)
 
